@@ -1,7 +1,7 @@
 import logging
 
 logger = logging.getLogger('qcodes')
-logger.debug('submodule message')
+logger.debug('helper module message')
 
 from asyncio import iscoroutinefunction
 from collections import Iterable
