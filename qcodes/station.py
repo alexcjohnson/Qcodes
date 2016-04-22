@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger('qcodes')
+logger.debug('submodule message')
+
 from qcodes.utils.metadata import Metadatable
 from qcodes.utils.helpers import make_unique, DelegateAttributes
 
@@ -16,6 +21,8 @@ class Station(Metadatable, DelegateAttributes):
     def __init__(self, *instruments, monitor=None, default=True, **kwargs):
         super().__init__(**kwargs)
 
+        logger.debug('Station init')
+
         # when a new station is defined, store it in a class variable
         # so it becomes the globally accessible default station.
         # You can still have multiple stations defined, but to use
@@ -32,6 +39,9 @@ class Station(Metadatable, DelegateAttributes):
         self.monitor = monitor
 
     def snapshot_base(self, *args, **kwargs):
+
+        logger.debug('Station snapshot_base')
+
         return {'instruments': {name: ins.snapshot(*args, **kwargs)
                                 for name, ins in self.instruments.items()}}
 

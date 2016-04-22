@@ -32,11 +32,15 @@ Measured parameters should have .get() (and/or .get_async()) which can return:
 - several arrays of values (all the same size):
     define .names (and .labels) AND .size (and .setpoints)
 '''
+import logging
+
+logger = logging.getLogger('qcodes')
+logger.debug('parameter message')
 
 from datetime import datetime, timedelta
 import time
 import asyncio
-import logging
+
 import os
 
 from qcodes.utils.helpers import (permissive_range, wait_secs,
@@ -354,7 +358,7 @@ class StandardParameter(Parameter):
                 set_parser = self._set_mapping.__getitem__
 
         if get_parser is not None and not isinstance(get_cmd, str):
-            logging.warning('get_parser is set, but will not be used (name %s)' % name)
+            logger.warning('get_parser is set, but will not be used (name %s)' % name)
         super().__init__(name=name, vals=vals, **kwargs)
 
         self._instrument = instrument
@@ -432,7 +436,7 @@ class StandardParameter(Parameter):
             # isn't, even though it's valid.
             # probably a MultiType with a mix of numeric and non-numeric types
             # just set the endpoint and move on
-            logging.warning('cannot sweep {} from {} to {} - jumping.'.format(
+            logger.warning('cannot sweep {} from {} to {} - jumping.'.format(
                 self.name, start_value, value))
             return []
 

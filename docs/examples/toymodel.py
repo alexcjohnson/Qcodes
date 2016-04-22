@@ -1,16 +1,20 @@
 # code for example notebook
+import logging
+
+logger = logging.getLogger('qcodes')
+logger.debug('Toymodel message')
 
 import math
 
 from qcodes import MockInstrument, MockModel, Parameter, Loop, DataArray
 from qcodes.utils.validators import Numbers
 
-
 class AModel(MockModel):
     def __init__(self):
         self._gates = [0.0, 0.0, 0.0]
         self._excitation = 0.1
         super().__init__()
+        logger.debug('Amodel init')
 
     def _output(self):
         # my super exciting model!
@@ -31,6 +35,7 @@ class AModel(MockModel):
         return '{:.3f}'.format(value)
 
     def gates_set(self, parameter, value):
+        # logger.debug('gates set')
         if parameter[0] == 'c':
             self._gates[int(parameter[1:])] = float(value)
         elif parameter == 'rst' and value is None:
@@ -57,6 +62,7 @@ class AModel(MockModel):
             raise ValueError
 
     def meter_get(self, parameter):
+        # logger.debug('meter get')
         if parameter == 'ampl':
             return self.fmt(self._output() * self._excitation)
         else:
@@ -70,6 +76,8 @@ class AModel(MockModel):
 class MockGates(MockInstrument):
     def __init__(self, name, model=None, **kwargs):
         super().__init__(name, model=model, **kwargs)
+
+        logger.debug('mockgates')
 
         for i in range(3):
             cmdbase = 'c{}'.format(i)

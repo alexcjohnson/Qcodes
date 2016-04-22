@@ -1,3 +1,9 @@
+import logging
+
+logger = logging.getLogger('qcodes')
+logger.debug('multiprocessing message')
+
+
 import multiprocessing as mp
 import sys
 from datetime import datetime
@@ -132,8 +138,13 @@ class StreamQueue:
 
         self.initial_streams = (sys.stdout, sys.stderr)
 
-        sys.stdout = _SQWriter(self, process_name)
-        sys.stderr = _SQWriter(self, process_name + ' ERR')
+        # Had to remove this strange stdout stderr things from multiprocessing.
+        # The logs from the sub processes also appear at the main logger,
+        # so that logger should get a handle that outputs to a widget or window or whatever
+
+
+        # sys.stdout = _SQWriter(self, process_name)
+        # sys.stderr = _SQWriter(self, process_name + ' ERR')
 
     def disconnect(self):
         if self.initial_streams is None:

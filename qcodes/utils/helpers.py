@@ -1,8 +1,13 @@
+import logging
+
+logger = logging.getLogger('qcodes')
+logger.debug('submodule message')
+
 from asyncio import iscoroutinefunction
 from collections import Iterable
 import time
 from inspect import signature
-import logging
+
 import math
 import sys
 import io
@@ -86,7 +91,7 @@ def wait_secs(finish_clock):
     '''
     delay = finish_clock - time.perf_counter()
     if delay < 0:
-        logging.warning('negative delay {:.6f} sec'.format(delay))
+        logger.warning('negative delay {:.6f} sec'.format(delay))
         return 0
     return delay
 
@@ -96,18 +101,21 @@ class LogCapture():
     context manager to grab all log messages, optionally
     from a specific logger
     '''
-    def __init__(self, logger=logging.getLogger()):
-        self.logger = logger
+    def __init__(self, logger=None):
+        pass
 
     def __enter__(self):
-        self.log_capture = io.StringIO()
-        self.string_handler = logging.StreamHandler(self.log_capture)
-        self.string_handler.setLevel(logging.DEBUG)
-        self.logger.addHandler(self.string_handler)
-        return self.log_capture
+        # self.log_capture = io.StringIO()
+        # self.string_handler = logging.StreamHandler(self.log_capture)
+        # self.string_handler.setLevel(logging.DEBUG)
+
+        # logger.addHandler(self.string_handler)
+        return None
+        # return self.log_capture
 
     def __exit__(self, type, value, tb):
-        self.logger.removeHandler(self.string_handler)
+        pass
+        # self.logger.removeHandler(self.string_handler)
 
 
 def make_unique(s, existing):

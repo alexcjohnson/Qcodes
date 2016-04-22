@@ -1,6 +1,13 @@
 # set up the qcodes namespace
 # flake8: noqa (we don't need the "<...> imported but unused" error)
 
+# Logging
+
+from qcodes import log
+logger = log.setup_custom_logger('qcodes')
+logger.debug('main message')
+
+
 # just for convenience in debugging, so we don't have to
 # separately import multiprocessing
 from multiprocessing import active_children

@@ -11,6 +11,10 @@ from qcodes.loops import MP_NAME, halt_bg
 display_auto('widgets/widgets.js')
 display_auto('widgets/widgets.css')
 
+import logging
+
+logger = logging.getLogger('qcodes')
+logger.debug('multiprocessing message')
 
 class UpdateWidget(widgets.DOMWidget):
     '''
