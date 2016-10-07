@@ -3,6 +3,12 @@ from qcodes.utils import validators
 
 
 class AlazarTech_ATS9870(AlazarTech_ATS):
+    """
+    This class is the driver for the ATS9870 board
+    it inherits from the ATS base class
+
+    it creates all necessary parameters for the Alazar card
+    """
     def __init__(self, name, **kwargs):
         dll_path = 'C:\\WINDOWS\\System32\\ATSApi.dll'
         super().__init__(name, dll_path=dll_path, **kwargs)
@@ -161,7 +167,7 @@ class AlazarTech_ATS9870(AlazarTech_ATS):
                            label='Samples per Record',
                            unit=None,
                            value=96000,
-                           vals=Multiples(divisor=64, min_value=256))
+                           vals=validators.Multiples(divisor=64, min_value=256))
 
         # TODO(damazter) (M) figure out if this also has to be a multiple of
         # something,
@@ -258,27 +264,3 @@ class AlazarTech_ATS9870(AlazarTech_ATS):
         if model != 'ATS9870':
             raise Exception("The Alazar board kind is not 'ATS9870',"
                             " found '" + str(model) + "' instead.")
-
-
-class Multiples(validators.Ints):
-    '''
-    requires an integer
-    optional parameters min_value and max_value enforce
-    min_value <= value <= max_value
-    divisor enforces that value % divisor == 0
-    '''
-
-    def __init__(self, divisor=1, **kwargs):
-        super().__init__(**kwargs)
-        if not isinstance(divisor, int):
-            raise TypeError('divisor must be an integer')
-        self._divisor = divisor
-
-    def validate(self, value, context=''):
-        super().validate(value=value, context=context)
-        if not value % self._divisor == 0:
-            raise TypeError('{} is not a multiple of {}; {}'.format(
-                repr(value), repr(self._divisor), context))
-
-    def __repr__(self):
-        return super().__repr__()[:-1] + ', Multiples of {}>'.format(self._divisor)
