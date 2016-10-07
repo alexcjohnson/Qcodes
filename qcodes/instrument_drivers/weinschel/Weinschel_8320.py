@@ -1,7 +1,7 @@
-from qcodes.instrument.visa import VisaInstrument
-from qcodes.utils import validators as vals
+# from qcodes.instrument.visa import VisaInstrument
+# from qcodes.utils import validators as vals
 import numpy as np
-
+from qcodes import VisaInstrument, validators as vals
 
 class Weinschel_8320(VisaInstrument):
     '''

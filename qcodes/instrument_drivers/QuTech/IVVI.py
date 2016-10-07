@@ -58,6 +58,8 @@ class IVVI(VisaInstrument):
         # values based on descriptor
         self.visa_handle.baud_rate = 115200
         self.visa_handle.parity = visa.constants.Parity(1)  # odd parity
+        self.visa_handle.write_termination=''
+        self.visa_handle.read_termination=''
 
         self.add_parameter('version',
                            get_cmd=self._get_version)
@@ -87,13 +89,19 @@ class IVVI(VisaInstrument):
 
         t1 = time.time()
 
-        # basic test to confirm we are properly connected
+#         basic test to confirm we are properly connected
         try:
             self.get_all()
         except Exception as ex:
             print('IVVI: get_all() failed, maybe connected to wrong port?')
             print(traceback.format_exc())
 
+        v=self.visa_handle
+
+        # make sure we igonore termination characters
+        # http://www.ni.com/tutorial/4256/en/#toc2 on Termination Character Enabled
+        v.set_visa_attribute(visa.constants.VI_ATTR_TERMCHAR_EN, 0)
+        v.set_visa_attribute(visa.constants.VI_ATTR_ASRL_END_IN, 0)
         print('Initialized IVVI-rack in %.2fs' % (t1-t0))
 
     def get_idn(self):
@@ -106,6 +114,8 @@ class IVVI(VisaInstrument):
         return dict(zip(('vendor', 'model', 'serial', 'firmware'), idparts))
 
     def _get_version(self):
+        # not all IVVI racks support the version command, so return a dummy
+        return -1
         mes = self.ask(bytes([3, 4]))
         v = mes[2]
         return v
@@ -227,9 +237,10 @@ class IVVI(VisaInstrument):
 
         returns message_len
         '''
-        # This is used when write is used in the ask command
-        expected_answer_length = message[0]
+        expected_answer_length = None
         if not raw:
+            # This is used when write is used in the ask command
+            expected_answer_length = message[0]
             message_len = len(message)+2
             error_code = bytes([0])
             message = bytes([message_len]) + error_code + message
@@ -246,6 +257,37 @@ class IVVI(VisaInstrument):
         # Protocol knows about the expected length of the answer
         message_len = self.write(message, raw=raw)
         return self.read(message_len=message_len)
+
+    def _read_raw_bytes_direct(self, size):
+        """ Read raw data using the visa lib
+        
+        """
+        with(self.visa_handle.ignore_warning(visa.constants.VI_SUCCESS_MAX_CNT)):
+            mes = self.visa_handle.visalib.read(
+                self.visa_handle.session, size)
+        return mes[0]
+
+    def _read_raw_bytes_multiple(self, size, maxread=256, verbose=0):
+        """ Read raw data in blocks using the visa lib
+        
+        The pyvisa visalib.read does not always terminates at a newline, this is a workaround
+        
+        Also see: https://github.com/qdev-dk/Qcodes/issues/276
+                  https://github.com/hgrecco/pyvisa/issues/225
+        """
+        ret = []
+        instr=self.visa_handle
+        with self.visa_handle.ignore_warning(visa.constants.VI_SUCCESS_MAX_CNT):
+            nread=0
+            while nread < size:
+                nn=min(maxread, size-nread)
+                chunk, status = instr.visalib.read(instr.session, nn)
+                ret += [chunk]
+                nread+=len(chunk)
+                if verbose:
+                    print('_read_raw: %d/%d bytes'  % (len(chunk), nread))
+        ret=b''.join(ret)
+        return ret  
 
     def read(self, message_len=None):
         # because protocol has no termination chars the read reads the number
@@ -265,10 +307,8 @@ class IVVI(VisaInstrument):
             if t1-t0 > timeout:
                 raise TimeoutError()
         # a workaround for a timeout error in the pyvsia read_raw() function
-        with(self.visa_handle.ignore_warning(visa.constants.VI_SUCCESS_MAX_CNT)):
-            mes = self.visa_handle.visalib.read(
-                self.visa_handle.session, bytes_in_buffer)
-        mes = mes[0]  # cannot be done on same line for some reason
+        mes=self._read_raw_bytes_multiple(bytes_in_buffer)
+                
         # if mes[1] != 0:
         #     # see protocol descriptor for error codes
         #     raise Exception('IVVI rack exception "%s"' % mes[1])
